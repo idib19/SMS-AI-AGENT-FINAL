@@ -13,13 +13,14 @@ router.post('/webhook', async (req, res) => {
         const { Body: messageContent, From: phoneNumber } = req.body;
         const standardizedPhone = standardizePhoneNumber(phoneNumber);
         
+    
         logger.info('📩 Incoming message:', {
             from: standardizedPhone,
             content: messageContent
         });
 
         // Save incoming message
-        await messageService.saveMessage({
+        const savedMessage = await messageService.saveMessage({
             phoneNumber: standardizedPhone,
             content: messageContent,
             direction: 'inbound'
@@ -27,32 +28,46 @@ router.post('/webhook', async (req, res) => {
 
         // Get conversation history
         const conversationHistory = await messageService.getConversationHistory(standardizedPhone);
-
+        
         // get customer info
         const customerInfo = await messageService.getCustomerInfo(standardizedPhone);
 
         // Generate AI response
         const aiResponse = await aiService.generateResponse(messageContent, conversationHistory, customerInfo);
 
-        // Save AI response
-        await messageService.saveMessage({
-            phoneNumber: standardizedPhone,
-            content: aiResponse,
-            direction: 'outbound'
+        // Only save to MongoDB if it's not an error state
+        if (aiResponse.state !== 'ERROR_CORRECTION') {
+            await messageService.saveMessage({
+                phoneNumber: standardizedPhone,
+                content: aiResponse.content,
+                direction: 'outbound'
+            });
+        } else {
+            logger.warn('Skipping MongoDB save for error response:', aiResponse.content);
+        }
+
+        // Send message via Twilio
+        const twilioResponse = await twilioService.sendMessage(
+            standardizedPhone,
+            aiResponse.content
+        );
+
+
+        res.json({
+            status: 'success',
+            messageSid: twilioResponse.sid,
+            content: aiResponse.content,
+            to: standardizedPhone
         });
 
-        // Send response back to Twilio
-        const twimlResponse = twilioService.createTwiMLResponse(aiResponse);
-        res.set('Content-Type', 'text/xml');
-        res.send(twimlResponse);
+        
 
     } catch (error) {
         logger.error('🔴 Error in webhook:', error);
-        const errorResponse = twilioService.createTwiMLResponse(
-            "I apologize, but I'm having temporary technical difficulties. Please try again in a moment."
-        );
-        res.set('Content-Type', 'text/xml');
-        res.send(errorResponse);
+        return res.status(500).json({ 
+            error: 'Internal server error',
+            details: error.message 
+        });
     }
 });
 

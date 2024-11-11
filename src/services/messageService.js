@@ -22,7 +22,7 @@ class MessageService {
             });
 
             await message.save();
-            logger.info(`Message saved successfully with ID: ${message._id}`);
+            logger.info(`Message saved successfully with ID: ${message.content}`);
             return message;
         } catch (error) {
             logger.error('Error saving message:', error);
@@ -30,17 +30,23 @@ class MessageService {
         }
     }
 
-    async getConversationHistory(phoneNumber, limit = 10) {
+    async getConversationHistory(phoneNumber, limit = 100) {
         try {
             const standardizedPhone = standardizePhoneNumber(phoneNumber);
             logger.info(`Fetching conversation history for ${standardizedPhone}`);
 
             const messages = await Message.find({ phoneNumber: standardizedPhone })
-                .sort({ createdAt: -1 })
-                .limit(limit);
+                .sort({ createdAt: 1 })
+                .limit(limit)
+                .select('content direction');
+
+            const formattedMessages = messages.map(message => ({
+                direction: message.direction,
+                content: message.content
+            }));
 
             logger.info(`Found ${messages.length} messages for ${standardizedPhone}`);
-            return messages;
+            return formattedMessages;
         } catch (error) {
             logger.error('Error fetching conversation history:', error);
             throw error;

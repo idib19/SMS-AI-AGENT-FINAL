@@ -7,7 +7,7 @@ const connectDB = require('./src/config/database');
 // Import routes
 const webhookRoutes = require('./src/routes/webhookRoutes');
 const healthRoutes = require('./src/routes/healthRoutes');
-
+const testRoutes = require('./src/routes/testRoutes');
 // Initialize express app
 const app = express();
 
@@ -21,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Routes
 app.use('/sms', webhookRoutes);
 app.use('/health', healthRoutes);
+app.use('/test', testRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
