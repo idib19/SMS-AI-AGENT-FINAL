@@ -26,24 +26,33 @@ router.post('/webhook', async (req, res) => {
             direction: 'inbound'
         });
 
-        // Get conversation history
+        // Get conversation history => JSON (WELL FORMATTED AND CLEAN JSON)
         const conversationHistory = await messageService.getConversationHistory(standardizedPhone);
         
         // get customer info
         const customerInfo = await messageService.getCustomerInfo(standardizedPhone);
 
+        const { instructions } = await aiService.analyzeConversation(conversationHistory);
         // Generate AI response
-        const aiResponse = await aiService.generateResponse(messageContent, conversationHistory, customerInfo);
+        const aiResponse = await aiService.generateResponse(messageContent, conversationHistory, customerInfo, instructions);
+        // Validate AI response before attempting to save
+        if (!aiResponse || !aiResponse.content) {
+            logger.error('Invalid AI response received:', aiResponse);
+            throw new Error('Invalid AI response format');
+        }
 
-        // Only save to MongoDB if it's not an error state
-        if (aiResponse.state !== 'ERROR_CORRECTION') {
+
+        try {
             await messageService.saveMessage({
                 phoneNumber: standardizedPhone,
                 content: aiResponse.content,
                 direction: 'outbound'
             });
-        } else {
-            logger.warn('Skipping MongoDB save for error response:', aiResponse.content);
+            logger.info('Successfully saved outbound message to MongoDB');
+        } catch (error) {
+            logger.error('Error saving outbound message:', error);
+            logger.error('AI Response content that failed:', aiResponse.content);
+            throw error;
         }
 
         // Send message via Twilio
@@ -63,7 +72,7 @@ router.post('/webhook', async (req, res) => {
         
 
     } catch (error) {
-        logger.error('🔴 Error in webhook:', error);
+        logger.error('🔴 Error in /webhook:', error);
         return res.status(500).json({ 
             error: 'Internal server error',
             details: error.message 

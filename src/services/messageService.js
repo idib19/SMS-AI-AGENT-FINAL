@@ -37,8 +37,7 @@ class MessageService {
 
             const messages = await Message.find({ phoneNumber: standardizedPhone })
                 .sort({ createdAt: 1 })
-                .limit(limit)
-                .select('content direction');
+                .limit(limit);
 
             const formattedMessages = messages.map(message => ({
                 direction: message.direction,
@@ -46,7 +45,7 @@ class MessageService {
             }));
 
             logger.info(`Found ${messages.length} messages for ${standardizedPhone}`);
-            return formattedMessages;
+            return formattedMessages ;
         } catch (error) {
             logger.error('Error fetching conversation history:', error);
             throw error;
