@@ -134,7 +134,7 @@ POST /api/webhook
 
 3. **Quote Provision**
    - Provides repair cost estimation
-   - Handles price-related queries
+   - Handles objections when needed
 
 4. **Appointment Scheduling**
    - Checks availability
