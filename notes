@@ -1,0 +1,20 @@
+MAKING A POST TO TRIGGER FIRST CONTACT MESSAGE
+--------------------------------------------
+curl -X POST http://localhost:3000/sms/trigger-message \
+-H "Content-Type: application/json" \
+-d '{
+ "phoneNumber": "+15142988183",
+ "customerInfo": {
+   "name": "Idrissa",
+   "phoneModel": "iPhone 13",
+   "issue": "cracked screen"
+ }
+}'
+--------------------------------------------
+
+CREATE A PORT/URL OPEN TO RECEIVE INBOUND MESSAGES FROM TWILIO AS A WEBHOOK
+--------------------------------------------
+lt --port 3000 --idris test
+--------------------------------------------
+
+

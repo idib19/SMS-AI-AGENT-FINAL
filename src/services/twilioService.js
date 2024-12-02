@@ -33,6 +33,8 @@ class TwilioService {
                 from: this.phoneNumber,
                 to: toNumber
             });
+
+            logger.info('📤 Outbound message:', messageBody, "to", toNumber);
             
             logger.info(`Message sent successfully: ${message.sid}`);
             return message;

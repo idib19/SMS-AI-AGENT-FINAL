@@ -232,7 +232,7 @@ class AIService {
                 messages: [{ role: 'user', content: systemPrompt }]
             });
 
-            const cleanedResponse = response.content;
+            const cleanedResponse = response.content[0]?.text;
 
             logger.info('First ai outbound message generated successfully:', {
                 originalLength: response.content[0]?.text?.length,

@@ -19,10 +19,12 @@ router.post('/trigger-message', async (req, res) => {
         // Generate AI message based on customer information
         const outboundMessage = await aiService.generateFirstContactMessage(customerInfo);
 
+        logger.info('📤 Outbound message generated:', outboundMessage);
+
         // Send message via Twilio
         const twilioResponse = await twilioService.sendMessage(
             standardizedPhone,
-            outboundMessage
+         outboundMessage
         );
 
         // Save outbound message to database and customer info
