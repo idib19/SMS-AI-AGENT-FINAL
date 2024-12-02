@@ -422,7 +422,7 @@ class AIService {
             // NOTES : HOW TO HANDLE FUNCTION CALLS ? EX : SCHEDULE AN APPOINTMENT, CANCEL AN APPOINTMENT, CHANGE INFORMATIONS, DATABASE UPDATES;
 
             // WE NEED TO LET THE AI KNOW IF THE LEAD ALREADY HAS AN APPOINTMENT OR NOT
-            // a robust mechanisim to get all custumer informations + appointment details and use them in the response
+            // a robust mechanisim to get all custumer informations + appointment details and use them accross responses
             // consistently ! 
             let messages = [{role: 'user', content: 
                 `You are an assistant for a phone repair store. Your task is to interact with hot leads 
@@ -456,7 +456,7 @@ class AIService {
 
             logger.info('AI response:', response);
 
-            // Handle tool calls if needed
+            // Handle tool calls if needed can be improved !
             if (response.stop_reason === "tool_use") {
                 const toolUse = response.content.find(block => block.type === "tool_use");
                 if (toolUse) {

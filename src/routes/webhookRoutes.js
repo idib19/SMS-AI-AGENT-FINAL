@@ -6,8 +6,54 @@ const logger = require('../utils/logger');
 const aiService = require('../services/aiService');
 const { standardizePhoneNumber } = require('../utils/phoneUtils');
 
+// First contact message endpoint
+router.post('/trigger-message', async (req, res) => {
+    try {
+        const { phoneNumber, customerInfo } = req.body;
+        const standardizedPhone = standardizePhoneNumber(phoneNumber);
+        
+        logger.info('📤 Triggering outbound message:', {
+            to: standardizedPhone
+        });
 
-// SMS webhook endpoint
+        // Generate AI message based on customer information
+        const outboundMessage = await aiService.generateFirstContactMessage(customerInfo);
+
+        // Send message via Twilio
+        const twilioResponse = await twilioService.sendMessage(
+            standardizedPhone,
+            outboundMessage
+        );
+
+        // Save outbound message to database and customer info
+        await messageService.saveMessage({
+            phoneNumber: standardizedPhone,
+            content: outboundMessage,
+            direction: 'outbound',
+            customerName: customerInfo?.name,
+            phoneModel: customerInfo?.phoneModel,
+            issueDescription: customerInfo?.issue
+        });
+
+        res.json({
+            status: 'success',
+            messageSid: twilioResponse.sid,
+            content: outboundMessage,
+            to: standardizedPhone
+        });
+
+    } catch (error) {
+        logger.error('🔴 Error in trigger-outbound:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Error sending outbound message',
+            error: error.message
+        });
+    }
+});
+
+
+// SMS webhook endpoint for handling all incoming messages
 router.post('/webhook', async (req, res) => {
     try {
         const { Body: messageContent, From: phoneNumber } = req.body;
@@ -127,50 +173,5 @@ router.post('/status', async (req, res) => {
     }
 });
 
-// First contact message endpoint
-router.post('/trigger-message', async (req, res) => {
-    try {
-        const { phoneNumber, customerInfo } = req.body;
-        const standardizedPhone = standardizePhoneNumber(phoneNumber);
-        
-        logger.info('📤 Triggering outbound message:', {
-            to: standardizedPhone
-        });
-
-        // Generate AI message based on customer information
-        const outboundMessage = await aiService.generateFirstContactMessage(customerInfo);
-
-        // Send message via Twilio
-        const twilioResponse = await twilioService.sendMessage(
-            standardizedPhone,
-            outboundMessage
-        );
-
-        // Save outbound message to database and customer info
-        await messageService.saveMessage({
-            phoneNumber: standardizedPhone,
-            content: outboundMessage,
-            direction: 'outbound',
-            customerName: customerInfo?.name,
-            phoneModel: customerInfo?.phoneModel,
-            issueDescription: customerInfo?.issue
-        });
-
-        res.json({
-            status: 'success',
-            messageSid: twilioResponse.sid,
-            content: outboundMessage,
-            to: standardizedPhone
-        });
-
-    } catch (error) {
-        logger.error('🔴 Error in trigger-outbound:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Error sending outbound message',
-            error: error.message
-        });
-    }
-});
 
 module.exports = router;
