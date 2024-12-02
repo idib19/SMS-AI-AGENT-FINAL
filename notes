@@ -17,4 +17,4 @@ CREATE A PORT/URL OPEN TO RECEIVE INBOUND MESSAGES FROM TWILIO AS A WEBHOOK
 lt --port 3000 --idris test
 --------------------------------------------
 
-
+https://sms-ai-agent-for-repair-store-production.up.railway.app/sms/trigger-message
