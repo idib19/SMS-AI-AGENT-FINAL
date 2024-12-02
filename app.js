@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const config = require('./src/config/environment');
 const logger = require('./src/utils/logger');
+const cors = require('cors');
 const connectDB = require('./src/config/database');
 
 // Import routes
@@ -17,6 +18,14 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
+
+// Or specific origins
+//app.use(cors({
+//    origin: ['https://your-frontend.com', 'http://localhost:3000'],
+//    methods: ['GET', 'POST'],
+//    allowedHeaders: ['Content-Type', 'Authorization']
+//}));
 
 // Routes
 app.use('/sms', webhookRoutes);
