@@ -1,11 +1,12 @@
 {
   "name": "sms-ai-agent",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "vercel-build": "echo \"No build step required\""
   },
   "keywords": [],
   "author": "",

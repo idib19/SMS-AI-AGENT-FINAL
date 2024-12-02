@@ -1,14 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const config = require('./src/config/environment');
-const logger = require('./src/utils/logger');
+const config = require('./config/environment');
+const logger = require('./utils/logger');
 const cors = require('cors');
-const connectDB = require('./src/config/database');
+const connectDB = require('./config/database');
 
 // Import routes
-const webhookRoutes = require('./src/routes/webhookRoutes');
-const healthRoutes = require('./src/routes/healthRoutes');
-const testRoutes = require('./src/routes/testRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
+const healthRoutes = require('./routes/healthRoutes');
+const testRoutes = require('./routes/testRoutes');
 // Initialize express app
 const app = express();
 
