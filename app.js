@@ -23,6 +23,11 @@ app.use('/sms', webhookRoutes);
 app.use('/health', healthRoutes);
 app.use('/test', testRoutes);
 
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     logger.error('Unhandled error:', err);
