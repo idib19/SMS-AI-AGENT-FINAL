@@ -2,8 +2,7 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const logger = require('../../utils/logger');
 const toolDefinitions = require('./tools/toolDefinitions');
 const toolHandler = require('./tools/toolHandler');
-const conversationAnalyzer = require('./analyzers/conversationAnalyzer');
-const { buildFirstContactPrompt, buildResponsePrompt } = require('./prompts/systemPrompts');
+const { buildFirstContactPrompt, buildResponsePrompt } = require('./prompts/messagePrompts');
 
 class AIService {
     constructor() {
@@ -15,11 +14,11 @@ class AIService {
 
     async generateFirstContactMessage(customerInfo) {
         try {
-            const systemPrompt = buildFirstContactPrompt(customerInfo);
+            const messagePrompt = buildFirstContactPrompt(customerInfo);
             const response = await this.client.messages.create({
                 model: 'claude-3-sonnet-20240229',
                 max_tokens: 150,
-                messages: [{ role: 'user', content: systemPrompt }]
+                messages: [{ role: 'user', content: messagePrompt }]
             });
 
             return response.content[0]?.text;
@@ -43,7 +42,16 @@ class AIService {
                 messages: messages
             });
 
-            return await toolHandler.handleResponse(response, messages);
+            if (response.stop_reason === "tool_use") {
+                return await toolHandler.handleToolUse(response, messages);
+            }
+
+            
+            return await {
+                content: response.content[0]?.text
+            };
+
+
         } catch (error) {
             logger.error('Error generating AI response:', error);
             return {

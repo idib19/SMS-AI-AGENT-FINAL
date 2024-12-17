@@ -47,10 +47,10 @@ const storeInfo = `
             only s20, s21, s22, s23, a51, a52, at : 139$
         `;
 
-        this.objectionHandlingGuide = `
+const objectionHandlingGuide = `
             - Objection handling guide:
             Here are some tools you can use to handle objections:
             - You can offer our Telus and koodo discount wich is 200$ off any repair if they become new Telus or koodo customer. Plans starts at 30$ per month.
         `;
 
-module.exports = storeInfo; 
+module.exports = { storeInfo, objectionHandlingGuide }; 

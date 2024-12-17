@@ -1,6 +1,6 @@
 const { Anthropic } = require('@anthropic-ai/sdk');
 const logger = require('../../../utils/logger');
-const { buildAnalysisPrompt } = require('../prompts/conversationPrompts');
+const { buildAnalysisPrompt } = require('../prompts/messagePrompts');
 
 class ConversationAnalyzer {
     constructor() {

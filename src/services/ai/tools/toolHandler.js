@@ -11,7 +11,9 @@ class ToolHandler {
     async handleToolUse(response, messages) {
         const toolUse = response.content.find(block => block.type === "tool_use");
         if (toolUse) {
+            // 1- call the tool
             const toolResult = await this.processToolCall(toolUse.name, toolUse.input);
+            // add the tool result to the messages
             messages.push({
                 role: "assistant",
                 content: `Tool ${toolUse.name} was called with result: ${JSON.stringify(toolResult)}`
