@@ -4,6 +4,7 @@ const config = require('./config/environment');
 const logger = require('./utils/logger');
 const cors = require('cors');
 const connectDB = require('./config/database');
+const path = require('path');
 
 // Import routes
 const webhookRoutes = require('./routes/webhookRoutes');

@@ -12,8 +12,17 @@ class ToolHandler {
         const toolUse = response.content.find(block => block.type === "tool_use");
         if (toolUse) {
             const toolResult = await this.processToolCall(toolUse.name, toolUse.input);
-            return await this.getFinalResponse(messages, toolUse, toolResult);
+            messages.push({
+                role: "assistant",
+                content: `Tool ${toolUse.name} was called with result: ${JSON.stringify(toolResult)}`
+            });
+            
+            return {
+                content: toolResult.message || "Tool execution completed",
+                toolResult: toolResult
+            };
         }
+        return { content: "No tool use found in response" };
     }
 
 // this is what the ai will use to call the tools
