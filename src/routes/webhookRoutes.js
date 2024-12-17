@@ -3,7 +3,8 @@ const router = express.Router();
 const twilioService = require('../services/twilioService');
 const messageService = require('../services/messageService');
 const logger = require('../utils/logger');
-const aiService = require('../services/aiService');
+const AIService = require('../services/ai/AIService');
+const conversationAnalyzer = require('../services/ai/analyzers/conversationAnalyzer');
 const { standardizePhoneNumber } = require('../utils/phoneUtils');
 
 // First contact message endpoint
@@ -17,14 +18,14 @@ router.post('/trigger-message', async (req, res) => {
         });
 
         // Generate AI message based on customer information
-        const outboundMessage = await aiService.generateFirstContactMessage(customerInfo);
+        const outboundMessage = await AIService.generateFirstContactMessage(customerInfo);
 
         logger.info('📤 Outbound message generated:', outboundMessage);
 
         // Send message via Twilio
         const twilioResponse = await twilioService.sendMessage(
             standardizedPhone,
-         outboundMessage
+            outboundMessage
         );
 
         // Save outbound message to database and customer info
@@ -54,54 +55,48 @@ router.post('/trigger-message', async (req, res) => {
     }
 });
 
-
 // SMS webhook endpoint for handling all incoming messages
 router.post('/webhook', async (req, res) => {
     try {
         const { Body: messageContent, From: phoneNumber } = req.body;
         const standardizedPhone = standardizePhoneNumber(phoneNumber);
         
-    
         logger.info('📩 Incoming message:', {
             from: standardizedPhone,
             content: messageContent
         });
 
         // Save incoming message
-        const savedMessage = await messageService.saveMessage({
+        await messageService.saveMessage({
             phoneNumber: standardizedPhone,
             content: messageContent,
             direction: 'inbound'
         });
 
-        // Get conversation history => JSON (WELL FORMATTED AND CLEAN JSON)
+        // Get conversation history
         const conversationHistory = await messageService.getConversationHistory(standardizedPhone);
         
-        // get customer info
+        // Get customer info
         const customerInfo = await messageService.getCustomerInfo(standardizedPhone);
 
-        const { instructions } = await aiService.analyzeConversation(conversationHistory);
-        // Generate AI response
-        const aiResponse = await aiService.generateResponse(messageContent, conversationHistory, customerInfo, instructions);
+        // Analyze conversation using the new conversationAnalyzer
+        const { instructions } = await conversationAnalyzer.analyzeConversation(conversationHistory);
+
+        // Generate AI response using new AIService
+        const aiResponse = await AIService.generateResponse(messageContent, customerInfo, instructions);
+
         // Validate AI response before attempting to save
         if (!aiResponse || !aiResponse.content) {
             logger.error('Invalid AI response received:', aiResponse);
             throw new Error('Invalid AI response format');
         }
 
-
-        try {
-            await messageService.saveMessage({
-                phoneNumber: standardizedPhone,
-                content: aiResponse.content,
-                direction: 'outbound'
-            });
-            logger.info('Successfully saved outbound message to MongoDB');
-        } catch (error) {
-            logger.error('Error saving outbound message:', error);
-            logger.error('AI Response content that failed:', aiResponse.content);
-            throw error;
-        }
+        // Save outbound message
+        await messageService.saveMessage({
+            phoneNumber: standardizedPhone,
+            content: aiResponse.content,
+            direction: 'outbound'
+        });
 
         // Send message via Twilio
         const twilioResponse = await twilioService.sendMessage(
@@ -109,15 +104,12 @@ router.post('/webhook', async (req, res) => {
             aiResponse.content
         );
 
-
         res.json({
             status: 'success',
             messageSid: twilioResponse.sid,
             content: aiResponse.content,
             to: standardizedPhone
         });
-
-        
 
     } catch (error) {
         logger.error('🔴 Error in /webhook:', error);
@@ -128,7 +120,7 @@ router.post('/webhook', async (req, res) => {
     }
 });
 
-// Optional: Add an endpoint to retrieve conversation history
+//endpoint to retrieve conversation history
 router.get('/history/:phoneNumber', async (req, res) => {
     try {
         const { phoneNumber } = req.params;
@@ -174,6 +166,5 @@ router.post('/status', async (req, res) => {
         res.sendStatus(500);
     }
 });
-
 
 module.exports = router;
