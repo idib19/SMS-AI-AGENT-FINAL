@@ -29,7 +29,7 @@ class MessageService {
             throw error;
         }
     }
-
+    // Get the conversation history for a given phone number
     async getConversationHistory(phoneNumber, limit = 100) {
         try {
             const standardizedPhone = standardizePhoneNumber(phoneNumber);
@@ -52,7 +52,7 @@ class MessageService {
         }
     }
 
-    // get customer name , email , phone model , issue description
+    // get customer name , email , phone model , issue description from the database 
     async getCustomerInfo(phoneNumber) {
         const customerInfo = await Message.findOne({ phoneNumber })
             .select('customerName phoneModel issueDescription');
