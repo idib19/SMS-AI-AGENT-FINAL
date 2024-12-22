@@ -50,7 +50,7 @@ async processToolCall(toolName, toolInput) {
                     success: true,
                     appointment_id: appointment.id,
                     scheduled_time: appointment.preferred_time,
-                    message: "Appointment successfully scheduled at promenades mall"
+                    message: `Appointment successfully scheduled at promenades mall at ${appointment.preferred_time}`
                 };
             } catch (error) {
                 logger.error('Error scheduling appointment:', error);
